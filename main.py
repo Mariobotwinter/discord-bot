@@ -78,12 +78,7 @@ async def on_message(message):
             await message.channel.send(răspuns)
 
         elif "ajutor" in mesaj or "help" in mesaj:
-            răspuns = "Te pot ajuta cu:
-- Prețuri
-- Modalități de plată
-- Servicii oferite
-- Livrare
-Scrie ce te interesează."
+            răspuns = "Te pot ajuta cu:\n- Prețuri\n- Modalități de plată\n- Servicii oferite\n- Livrare\nScrie ce te interesează."
             await message.channel.send(răspuns)
 
         else:
@@ -93,10 +88,8 @@ Scrie ce te interesează."
         canal_log = bot.get_channel(LOG_CHANNEL_ID)
         if canal_log:
             await canal_log.send(
-                f"**[DM de la {message.author}]**
-"
-                f"**Mesaj:** {message.content}
-"
+                f"**[DM de la {message.author}]**\n"
+                f"**Mesaj:** {message.content}\n"
                 f"**Răspuns:** {răspuns}"
             )
 
