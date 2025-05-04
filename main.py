@@ -15,9 +15,13 @@ LOG_CHANNEL_ID = 1367958714379927693
 SERVER_ID = 1324363465745240118
 ROL_ID = 1327354131181994004
 translator = Translator()
-
-# Urmărim utilizatorii care trebuie să primească follow-up
 pending_users = {}
+
+def raspunde_in_limba_detectata(mesaj, raspuns_ro, raspuns_en):
+    limba = translator.detect(mesaj).lang
+    if limba == "en":
+        return raspuns_en
+    return raspuns_ro
 
 @bot.event
 async def on_ready():
@@ -30,7 +34,6 @@ async def on_message(message):
 
     user_id = message.author.id
 
-    # Dovadă de plată (poză)
     if isinstance(message.channel, discord.DMChannel) and message.attachments:
         for attachment in message.attachments:
             if attachment.content_type and attachment.content_type.startswith("image/"):
@@ -54,7 +57,6 @@ async def on_message(message):
                         await message.channel.send("Te rog să fii pe server pentru a-ți oferi accesul.")
                 return
 
-    # Mesaje normale (text)
     if isinstance(message.channel, discord.DMChannel):
         mesaj = message.content.lower()
         răspuns = None
@@ -64,14 +66,22 @@ async def on_message(message):
             return
 
         if any(cuvânt in mesaj for cuvânt in ["salut", "bună", "hello", "hei", "hey"]):
-            răspuns = "Salut! Cu ce te pot ajuta?"
+            răspuns = raspunde_in_limba_detectata(
+                mesaj,
+                "Salut! Cu ce te pot ajuta?",
+                "Hello! How can I help you?"
+            )
 
         elif any(expr in mesaj for expr in [
             "acces", "vreau acces", "vreau să cumpăr", "achiziționez",
             "vreau să achiziționez", "cum cumpăr", "pot cumpăra",
-            "vreau să iau", "dă-mi acces", "doresc acces"
+            "vreau să iau", "dă-mi acces", "doresc acces", "access", "buy"
         ]):
-            răspuns = "Cu ce metodă plătești? Revolut, PayPal sau transfer cu cardul. (Accesul costă 70 RON)"
+            răspuns = raspunde_in_limba_detectata(
+                mesaj,
+                "Cu ce metodă plătești? Revolut, PayPal sau transfer cu cardul. (Accesul costă 70 RON)",
+                "Which payment method do you prefer? Revolut, PayPal or card transfer. (Access costs 70 RON)"
+            )
             await start_follow_up_timer(message)
 
         elif any(cuvânt in mesaj for cuvânt in ["revolut", "rev", "Rev"]):
@@ -83,13 +93,20 @@ async def on_message(message):
         elif any(cuvânt in mesaj for cuvânt in ["card", "transfer", "iban", "IBAN"]):
             răspuns = "Poți face transfer la:\nIBAN: RO56BTRLRONCRT0CQ2528301\nTitular: Nume la alegere"
 
-        elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj:
-            răspuns = "Prețul serviciului este 70 RON."
+        elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj or "price" in mesaj:
+            răspuns = raspunde_in_limba_detectata(
+                mesaj,
+                "Prețul accesului este 70 RON.",
+                "The access costs 70 RON."
+            )
             await start_follow_up_timer(message)
 
         elif "ajutor" in mesaj or "help" in mesaj:
-            răspuns = "Te pot ajuta cu:\n- Prețuri\n- Metode de plată\n- Livrare\nScrie ce te interesează."
-
+            răspuns = raspunde_in_limba_detectata(
+                mesaj,
+                "Te pot ajuta cu:\n- Prețuri\n- Metode de plată\n- Livrare\nScrie ce te interesează.",
+                "I can help you with:\n- Prices\n- Payment methods\n- Delivery info\nJust ask."
+            )
         else:
             traducere = translator.translate(message.content, dest='ro')
             răspuns = f"Traducere: {traducere.text}"
@@ -97,14 +114,12 @@ async def on_message(message):
         await asyncio.sleep(1)
         await message.channel.send(răspuns)
 
-        # Log
         log_channel = bot.get_channel(LOG_CHANNEL_ID)
         if log_channel:
             await log_channel.send(
                 f"**[DM de la {message.author}]**\n**Mesaj:** {message.content}\n**Răspuns:** {răspuns}"
             )
 
-        # Dacă userul scrie din nou — resetăm timerul
         if user_id in pending_users:
             pending_users[user_id]['task'].cancel()
             del pending_users[user_id]
