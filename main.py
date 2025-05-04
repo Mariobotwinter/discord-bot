@@ -8,7 +8,7 @@ intents.dm_messages = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-LOG_CHANNEL_ID = 1367958714379927693  # ← Înlocuiește cu ID-ul canalului tău de log
+LOG_CHANNEL_ID = 1367958714379927693  # Înlocuiește cu ID-ul canalului tău de log dacă vrei
 
 @bot.event
 async def on_ready():
@@ -23,77 +23,35 @@ async def on_message(message):
         mesaj = message.content.lower()
         răspuns = None
 
-        if any(cuvânt in mesaj for cuvânt in ["salut", "bună", "buna", "hello", "hey", "hei"]):
+        if any(cuvânt in mesaj for cuvânt in ["salut", "bună", "hello", "hei", "hey"]):
             răspuns = "Salut! Cu ce te pot ajuta?"
-            await message.channel.send(răspuns)
-
         elif any(expr in mesaj for expr in [
-            "acces", "vreau acces", "vreau să cumpăr", "vreau sa cumpar",
-            "achiziționez", "achizitionez", "vreau să achiziționez", "vreau sa achizitionez",
-            "cum cumpăr", "cum pot cumpăra", "pot cumpăra", "vreau să iau",
-            "aș vrea să cumpăr", "as vrea sa cumpar", "cum iau acces", "dă-mi acces", "da-mi acces",
-            "doresc acces", "doresc să cumpăr", "doresc sa cumpar"
+            "acces", "vreau acces", "vreau să cumpăr", "achiziționez",
+            "vreau să achiziționez", "cum cumpăr", "pot cumpăra",
+            "vreau să iau", "dă-mi acces", "doresc acces"
         ]):
             răspuns = "Cu ce metodă plătești? Revolut, PayPal sau transfer cu cardul. (Accesul costă 70 RON)"
-            await message.channel.send(răspuns)
-
-        elif any(cuvânt in mesaj for cuvânt in ["revolut", "rev"]):
-            răspuns = "Poți plăti prin Revolut aici: https://revolut.me/exemplu"
-            await message.channel.send(răspuns)
-
-        elif any(cuvânt in mesaj for cuvânt in ["paypal", "pp"]):
-            răspuns = "Poți plăti prin PayPal aici: https://paypal.me/exemplu"
-            await message.channel.send(răspuns)
-
-        elif any(cuvânt in mesaj for cuvânt in ["card", "transfer", "prin iban"]):
-            răspuns = "Pentru transfer cu cardul sau IBAN, te rog să ceri detalii suplimentare. Vom reveni imediat cu informațiile."
-            await message.channel.send(răspuns)
-
-        elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj or "cat costa" in mesaj:
+        elif any(cuvânt in mesaj for cuvânt in ["revolut", "rev", "Rev"]):
+            răspuns = "Poți plăti prin Revolut aici: https://revolut.me/liliancj2v"
+        elif any(cuvânt in mesaj for cuvânt in ["paypal", "pp", "PayPal"]):
+            răspuns = "Poți plăti prin PayPal aici: https://www.paypal.me/RomaniaQuiz"
+        elif any(cuvânt in mesaj for cuvânt in ["card", "transfer", "iban", "IBAN"]):
+            răspuns = "Poți face transfer la:\nIBAN: RO56BTRLRONCRT0CQ2528301\nTitular: Nume la alegere"
+        elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj:
             răspuns = "Prețul serviciului este 70 RON."
-            await message.channel.send(răspuns)
-
-        elif "servicii" in mesaj or "ce oferi" in mesaj or "ofertă" in mesaj or "oferta" in mesaj:
-            răspuns = "Ofer servicii de automatizare, configurare Discord și suport tehnic."
-            await message.channel.send(răspuns)
-
-        elif "cum pot plăti" in mesaj or "modalitate de plată" in mesaj or "modalitate de plata" in mesaj:
-            răspuns = "Poți plăti prin Revolut sau PayPal. Spune-mi ce preferi."
-            await message.channel.send(răspuns)
-
-        elif "livrare" in mesaj or "cât durează" in mesaj or "cat dureaza" in mesaj:
-            răspuns = "Livrarea se face în 1-2 ore după confirmarea plății."
-            await message.channel.send(răspuns)
-
-        elif "factură" in mesaj or "factura" in mesaj or "bon" in mesaj or "dovadă" in mesaj or "dovada" in mesaj:
-            răspuns = "Desigur, pot oferi factură la cerere. Te rog să specifici după plată."
-            await message.channel.send(răspuns)
-
-        elif "sigur" in mesaj or "este sigur" in mesaj or "încredere" in mesaj or "incredere" in mesaj:
-            răspuns = "Desigur! Ofer suport complet și am clienți mulțumiți. Poți verifica recenziile."
-            await message.channel.send(răspuns)
-
-        elif "cum primesc" in mesaj or "ce primesc" in mesaj:
-            răspuns = "Primești totul pe Discord, imediat după confirmarea plății."
-            await message.channel.send(răspuns)
-
         elif "ajutor" in mesaj or "help" in mesaj:
-            răspuns = "Te pot ajuta cu:\n- Prețuri\n- Modalități de plată\n- Servicii oferite\n- Livrare\nScrie ce te interesează."
-            await message.channel.send(răspuns)
-
+            răspuns = "Te pot ajuta cu:\n- Prețuri\n- Metode de plată\n- Livrare\nScrie ce te interesează."
         else:
             răspuns = "Îmi pare rău, nu am înțeles. Scrie 'ajutor' pentru opțiuni."
-            await message.channel.send(răspuns)
+
+        await message.channel.send(răspuns)
 
         canal_log = bot.get_channel(LOG_CHANNEL_ID)
         if canal_log:
             await canal_log.send(
-                f"**[DM de la {message.author}]**\n"
-                f"**Mesaj:** {message.content}\n"
-                f"**Răspuns:** {răspuns}"
+                f"**[DM de la {message.author}]**\n**Mesaj:** {message.content}\n**Răspuns:** {răspuns}"
             )
 
-try:
-    bot.run(os.getenv("TOKEN"))
-except Exception as e:
-    print(f"Eroare la pornirea botului: {e}")
+    await bot.process_commands(message)
+
+bot.run(os.getenv("TOKEN"))
