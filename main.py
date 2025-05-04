@@ -5,10 +5,13 @@ import os
 intents = discord.Intents.default()
 intents.message_content = True
 intents.dm_messages = True
+intents.members = True  # ca să poată da roluri
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-LOG_CHANNEL_ID = 1367958714379927693  # Înlocuiește cu ID-ul canalului tău de log dacă vrei
+LOG_CHANNEL_ID = 1367958714379927693
+SERVER_ID = 1324363465745240118
+ROL_ID = 1327354131181994004
 
 @bot.event
 async def on_ready():
@@ -23,6 +26,13 @@ async def on_message(message):
         mesaj = message.content.lower()
         răspuns = None
 
+        # Mesaj text: confirmare plată
+        if any(cuv in mesaj for cuv in ["am plătit", "am platit", "gata", "am trimis", "am dat"]):
+            răspuns = "Trimite-mi te rog o dovadă de plată (un screenshot)."
+            await message.channel.send(răspuns)
+            return
+
+        # Răspunsuri automate clasice
         if any(cuvânt in mesaj for cuvânt in ["salut", "bună", "hello", "hei", "hey"]):
             răspuns = "Salut! Cu ce te pot ajuta?"
         elif any(expr in mesaj for expr in [
@@ -46,11 +56,34 @@ async def on_message(message):
 
         await message.channel.send(răspuns)
 
+        # Trimitere log text
         canal_log = bot.get_channel(LOG_CHANNEL_ID)
         if canal_log:
-            await canal_log.send(
-                f"**[DM de la {message.author}]**\n**Mesaj:** {message.content}\n**Răspuns:** {răspuns}"
-            )
+            await canal_log.send(f"**[DM de la {message.author}]**\n**Mesaj:** {message.content}\n**Răspuns:** {răspuns}")
+
+    # Dacă mesajul conține o imagine (dovadă de plată)
+    if isinstance(message.channel, discord.DMChannel) and message.attachments:
+        for attachment in message.attachments:
+            if attachment.content_type and attachment.content_type.startswith("image/"):
+                log_channel = bot.get_channel(LOG_CHANNEL_ID)
+                if log_channel:
+                    await log_channel.send(f"**Dovadă de plată de la {message.author}:**")
+                    await log_channel.send(attachment.url)
+
+                # Adăugăm rolul pe server
+                guild = bot.get_guild(SERVER_ID)
+                if guild:
+                    member = guild.get_member(message.author.id)
+                    if member:
+                        rol = guild.get_role(ROL_ID)
+                        if rol:
+                            await member.add_roles(rol)
+                            await message.channel.send("Mulțumesc! Ți-am acordat accesul.")
+                        else:
+                            await message.channel.send("Nu am găsit rolul.")
+                    else:
+                        await message.channel.send("Te rog să intri pe serverul nostru pentru a-ți oferi accesul.")
+                break
 
     await bot.process_commands(message)
 
