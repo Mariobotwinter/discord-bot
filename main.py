@@ -15,13 +15,9 @@ LOG_CHANNEL_ID = 1367958714379927693
 SERVER_ID = 1324363465745240118
 ROL_ID = 1327354131181994004
 translator = Translator()
-pending_users = {}
 
-def raspunde_in_limba_detectata(mesaj, raspuns_ro, raspuns_en):
-    limba = translator.detect(mesaj).lang
-    if limba == "en":
-        return raspuns_en
-    return raspuns_ro
+pending_users = {}
+user_data = {}
 
 @bot.event
 async def on_ready():
@@ -33,7 +29,19 @@ async def on_message(message):
         return
 
     user_id = message.author.id
+    username = message.author.name
 
+    # Inițializare
+    if user_id not in user_data:
+        user_data[user_id] = {
+            "last_msg": "",
+            "interactions": 0
+        }
+
+    user_data[user_id]["last_msg"] = message.content
+    user_data[user_id]["interactions"] += 1
+
+    # Dacă e poză (fără text sau cu)
     if isinstance(message.channel, discord.DMChannel) and message.attachments:
         for attachment in message.attachments:
             if attachment.content_type and attachment.content_type.startswith("image/"):
@@ -50,7 +58,7 @@ async def on_message(message):
                         if role:
                             await asyncio.sleep(1)
                             await member.add_roles(role)
-                            await message.channel.send("Mulțumesc! Ți-am acordat accesul.")
+                            await message.channel.send("Mulțumesc pentru dovadă de plată! Ți-am oferit accesul.")
                         else:
                             await message.channel.send("Rolul nu a fost găsit.")
                     else:
@@ -60,58 +68,63 @@ async def on_message(message):
     if isinstance(message.channel, discord.DMChannel):
         mesaj = message.content.lower()
         răspuns = None
+        lang = 'ro'
 
-        if any(cuv in mesaj for cuv in ["am plătit", "am platit", "gata", "am trimis", "am dat"]):
+        # Detectare limbă + traducere
+        try:
+            traducere = translator.translate(message.content, dest='ro')
+            mesaj_tradus = traducere.text.lower()
+            if traducere.src == "en":
+                lang = "en"
+        except:
+            mesaj_tradus = mesaj
+
+        # Text: am plătit -> cere dovadă
+        if any(x in mesaj_tradus for x in ["am plătit", "gata", "am trimis", "am dat"]):
             await message.channel.send("Trimite-mi te rog o dovadă de plată (un screenshot).")
             return
 
-        if any(cuvânt in mesaj for cuvânt in ["salut", "bună", "hello", "hei", "hey"]):
-            răspuns = raspunde_in_limba_detectata(
-                mesaj,
-                "Salut! Cu ce te pot ajuta?",
-                "Hello! How can I help you?"
-            )
+        # Salut
+        if any(x in mesaj_tradus for x in ["salut", "bună", "hello", "hei", "hey"]):
+            răspuns = f"Salut {username}! Cu ce te pot ajuta?"
 
-        elif any(expr in mesaj for expr in [
-            "acces", "vreau acces", "vreau să cumpăr", "achiziționez",
-            "vreau să achiziționez", "cum cumpăr", "pot cumpăra",
-            "vreau să iau", "dă-mi acces", "doresc acces", "access", "buy"
+        # Dorință acces / cumpărare
+        elif any(x in mesaj_tradus for x in [
+            "acces", "vreau acces", "cumpăr", "achiziționez", "dă-mi acces",
+            "vreau să cumpăr", "cum cumpăr", "how much", "price", "buy"
         ]):
-            răspuns = raspunde_in_limba_detectata(
-                mesaj,
-                "Cu ce metodă plătești? Revolut, PayPal sau transfer cu cardul. (Accesul costă 70 RON)",
-                "Which payment method do you prefer? Revolut, PayPal or card transfer. (Access costs 70 RON)"
-            )
+            răspuns = "Cu ce metodă plătești? Revolut, PayPal sau transfer cu cardul. (Accesul costă 70 RON)"
             await start_follow_up_timer(message)
 
-        elif any(cuvânt in mesaj for cuvânt in ["revolut", "rev", "Rev"]):
+        # Metode plată
+        elif "revolut" in mesaj_tradus or "rev" in mesaj_tradus:
             răspuns = "Poți plăti prin Revolut aici: https://revolut.me/liliancj2v"
 
-        elif any(cuvânt in mesaj for cuvânt in ["paypal", "pp", "PayPal"]):
+        elif "paypal" in mesaj_tradus or "pp" in mesaj_tradus:
             răspuns = "Poți plăti prin PayPal aici: https://www.paypal.me/RomaniaQuiz"
 
-        elif any(cuvânt in mesaj for cuvânt in ["card", "transfer", "iban", "IBAN"]):
+        elif "iban" in mesaj_tradus or "card" in mesaj_tradus or "transfer" in mesaj_tradus:
             răspuns = "Poți face transfer la:\nIBAN: RO56BTRLRONCRT0CQ2528301\nTitular: Nume la alegere"
 
-        elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj or "price" in mesaj:
-            răspuns = raspunde_in_limba_detectata(
-                mesaj,
-                "Prețul accesului este 70 RON.",
-                "The access costs 70 RON."
-            )
+        # Preț
+        elif "preț" in mesaj_tradus or "pret" in mesaj_tradus or "cât costă" in mesaj_tradus:
+            răspuns = "Prețul accesului este 70 RON."
             await start_follow_up_timer(message)
 
-        elif "ajutor" in mesaj or "help" in mesaj:
-            răspuns = raspunde_in_limba_detectata(
-                mesaj,
-                "Te pot ajuta cu:\n- Prețuri\n- Metode de plată\n- Livrare\nScrie ce te interesează.",
-                "I can help you with:\n- Prices\n- Payment methods\n- Delivery info\nJust ask."
-            )
-        else:
-            traducere = translator.translate(message.content, dest='ro')
-            răspuns = f"Traducere: {traducere.text}"
+        # Ajutor
+        elif "ajutor" in mesaj_tradus or "help" in mesaj_tradus:
+            răspuns = "Te pot ajuta cu:\n- Prețuri\n- Metode de plată\n- Livrare\nScrie ce te interesează."
 
-        await asyncio.sleep(1)
+        else:
+            răspuns = "Îmi pare rău, nu am înțeles. Scrie 'ajutor' pentru opțiuni."
+
+        if lang == "en":
+            try:
+                traducere = translator.translate(răspuns, dest="en")
+                răspuns = traducere.text
+            except:
+                pass
+
         await message.channel.send(răspuns)
 
         log_channel = bot.get_channel(LOG_CHANNEL_ID)
@@ -134,7 +147,7 @@ async def start_follow_up_timer(message):
 
     async def timer():
         try:
-            await asyncio.sleep(600)  # 10 minute
+            await asyncio.sleep(600)
             await message.channel.send("Mai ești aici? Pot să te ajut cu altceva?")
         except asyncio.CancelledError:
             pass
