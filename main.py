@@ -87,8 +87,8 @@ async def on_message(message):
             răspuns = (
                 "Poți plăti prin Revolut aici: https://revolut.me/liliancj2v"
 
-                "PayPal: https://www.paypal.me/RomaniaQuiz
-"
+                "PayPal: https://www.paypal.me/RomaniaQuiz"
+
                 "IBAN: RO56BTRLRONCRT0CQ2528301 - Titular: Nume la alegere"
             )
 
@@ -98,11 +98,11 @@ async def on_message(message):
 
         else:
             răspuns = (
-                "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice).
-"
-                "Dacă întâmpini probleme, contactează Owner-ul serverului.
+                "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice)."
 
-"
+                "Dacă întâmpini probleme, contactează Owner-ul serverului."
+
+
                 "Până atunci te pot ajuta cu:"
             )
             await message.channel.send(răspuns, view=AjutorButtons())
