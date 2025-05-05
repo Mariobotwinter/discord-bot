@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 import asyncio
 from googletrans import Translator
+from discord.ui import Button, View
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -31,7 +32,6 @@ async def on_message(message):
     user_id = message.author.id
     username = message.author.name
 
-    # Inițializare
     if user_id not in user_data:
         user_data[user_id] = {
             "last_msg": "",
@@ -41,7 +41,6 @@ async def on_message(message):
     user_data[user_id]["last_msg"] = message.content
     user_data[user_id]["interactions"] += 1
 
-    # Dacă e poză (fără text sau cu)
     if isinstance(message.channel, discord.DMChannel) and message.attachments:
         for attachment in message.attachments:
             if attachment.content_type and attachment.content_type.startswith("image/"):
@@ -70,7 +69,6 @@ async def on_message(message):
         răspuns = None
         lang = 'ro'
 
-        # Detectare limbă + traducere
         try:
             traducere = translator.translate(message.content, dest='ro')
             mesaj_tradus = traducere.text.lower()
@@ -79,16 +77,13 @@ async def on_message(message):
         except:
             mesaj_tradus = mesaj
 
-        # Text: am plătit -> cere dovadă
         if any(x in mesaj_tradus for x in ["am plătit", "gata", "am trimis", "am dat"]):
             await message.channel.send("Trimite-mi te rog o dovadă de plată (un screenshot).")
             return
 
-        # Salut
         if any(x in mesaj_tradus for x in ["salut", "bună", "hello", "hei", "hey"]):
             răspuns = f"Salut {username}! Cu ce te pot ajuta?"
 
-        # Dorință acces / cumpărare
         elif any(x in mesaj_tradus for x in [
             "acces", "vreau acces", "cumpăr", "achiziționez", "dă-mi acces",
             "vreau să cumpăr", "cum cumpăr", "how much", "price", "buy"
@@ -96,7 +91,6 @@ async def on_message(message):
             răspuns = "Cu ce metodă plătești? Revolut, PayPal sau transfer cu cardul. (Accesul costă 70 RON)"
             await start_follow_up_timer(message)
 
-        # Metode plată
         elif "revolut" in mesaj_tradus or "rev" in mesaj_tradus:
             răspuns = "Poți plăti prin Revolut aici: https://revolut.me/liliancj2v"
 
@@ -106,12 +100,10 @@ async def on_message(message):
         elif "iban" in mesaj_tradus or "card" in mesaj_tradus or "transfer" in mesaj_tradus:
             răspuns = "Poți face transfer la:\nIBAN: RO56BTRLRONCRT0CQ2528301\nTitular: Nume la alegere"
 
-        # Preț
         elif "preț" in mesaj_tradus or "pret" in mesaj_tradus or "cât costă" in mesaj_tradus:
             răspuns = "Prețul accesului este 70 RON."
             await start_follow_up_timer(message)
 
-        # Ajutor
         elif "ajutor" in mesaj_tradus or "help" in mesaj_tradus:
             răspuns = "Te pot ajuta cu:\n- Prețuri\n- Metode de plată\n- Livrare\nScrie ce te interesează."
 
@@ -154,5 +146,27 @@ async def start_follow_up_timer(message):
 
     task = asyncio.create_task(timer())
     pending_users[user_id] = {"task": task}
+
+# Comandă pentru a trimite mesajul cu buton într-un canal
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def buton_acces(ctx):
+    button = Button(label="Vreau acces", style=discord.ButtonStyle.green)
+
+    async def on_click(interaction):
+        await interaction.response.send_message("Verific... îți trimit un mesaj în privat!", ephemeral=True)
+        try:
+            await interaction.user.send(
+                "Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! "
+                "Scrie cu ce metodă vrei să plătești și se rezolvă!"
+            )
+        except discord.Forbidden:
+            await interaction.followup.send("Nu pot trimite mesaj în privat. Activează DM-urile!", ephemeral=True)
+
+    button.callback = on_click
+    view = View()
+    view.add_item(button)
+
+    await ctx.send("Dacă ești interesat, apasă pe butonul de mai jos sau mesaj în privat.", view=view)
 
 bot.run(os.getenv("TOKEN"))
