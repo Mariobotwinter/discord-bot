@@ -86,7 +86,7 @@ async def on_message(message):
         elif any(cuv in mesaj for cuv in ["revolut", "paypal", "card", "transfer", "iban"]):
             răspuns = (
                 "Poți plăti prin Revolut aici: https://revolut.me/liliancj2v"
-"
+
                 "PayPal: https://www.paypal.me/RomaniaQuiz
 "
                 "IBAN: RO56BTRLRONCRT0CQ2528301 - Titular: Nume la alegere"
