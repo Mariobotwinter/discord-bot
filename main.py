@@ -96,11 +96,10 @@ Titular: Nume la alegere"
 
         else:
             await message.channel.send(
-                "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice).
-"
-                "Dacă întâmpini probleme, contactează Owner-ul serverului.
+                "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice)."
+                
+                "Dacă întâmpini probleme, contactează Owner-ul serverului."
 
-"
                 "Până atunci te pot ajuta cu:"
             )
             await message.channel.send(view=HelpButtons())
