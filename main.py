@@ -18,56 +18,48 @@ ROL_ID = 1327354131181994004
 translator = Translator()
 
 pending_users = {}
-user_data = {}
+
+class FallbackButtons(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(Button(label="Metode de plată", style=discord.ButtonStyle.primary, custom_id="plata"))
+        self.add_item(Button(label="Cum primesc accesul", style=discord.ButtonStyle.primary, custom_id="acces"))
+        self.add_item(Button(label="Întâmpin dificultăți (Owner-ul te va contacta)", style=discord.ButtonStyle.secondary, custom_id="owner"))
 
 @bot.event
 async def on_ready():
     print(f"Botul este online ca {bot.user}")
 
 @bot.event
+async def on_interaction(interaction):
+    if not interaction.type == discord.InteractionType.component:
+        return
+
+    if interaction.data["custom_id"] == "plata":
+        await interaction.response.send_message(
+            "Poți plăti prin:\n- Revolut: https://revolut.me/liliancj2v\n- PayPal: https://www.paypal.me/RomaniaQuiz\n- Card (transfer): IBAN: RO56BTRLRONCRT0CQ2528301",
+            ephemeral=True
+        )
+    elif interaction.data["custom_id"] == "acces":
+        await interaction.response.send_message(
+            "Primești acces imediat pe server după confirmarea plății. Asigură-te că ești pe server!",
+            ephemeral=True
+        )
+    elif interaction.data["custom_id"] == "owner":
+        await interaction.response.send_message(
+            "Owner-ul serverului va fi notificat și te va contacta cât de curând.",
+            ephemeral=True
+        )
+
+@bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
 
-    user_id = message.author.id
-    username = message.author.name
-
-    if user_id not in user_data:
-        user_data[user_id] = {
-            "last_msg": "",
-            "interactions": 0
-        }
-
-    user_data[user_id]["last_msg"] = message.content
-    user_data[user_id]["interactions"] += 1
-
-    if isinstance(message.channel, discord.DMChannel) and message.attachments:
-        for attachment in message.attachments:
-            if attachment.content_type and attachment.content_type.startswith("image/"):
-                log_channel = bot.get_channel(LOG_CHANNEL_ID)
-                if log_channel:
-                    await log_channel.send(f"**Dovadă de plată de la {message.author}:**")
-                    await log_channel.send(attachment.url)
-
-                guild = bot.get_guild(SERVER_ID)
-                if guild:
-                    member = guild.get_member(user_id)
-                    if member:
-                        role = guild.get_role(ROL_ID)
-                        if role:
-                            await asyncio.sleep(1)
-                            await member.add_roles(role)
-                            await message.channel.send("Mulțumesc pentru dovadă de plată! Ți-am oferit accesul.")
-                        else:
-                            await message.channel.send("Rolul nu a fost găsit.")
-                    else:
-                        await message.channel.send("Te rog să fii pe server pentru a-ți oferi accesul.")
-                return
-
     if isinstance(message.channel, discord.DMChannel):
         mesaj = message.content.lower()
         răspuns = None
-        lang = 'ro'
+        lang = "ro"
 
         try:
             traducere = translator.translate(message.content, dest='ro')
@@ -77,12 +69,13 @@ async def on_message(message):
         except:
             mesaj_tradus = mesaj
 
-        if any(x in mesaj_tradus for x in ["am plătit", "gata", "am trimis", "am dat"]):
+        # Salut simplu
+        if mesaj.strip() in ["salut", "sall", "buna", "bună", "alo", "hei", "hey", "hello", "hi"]:
+            răspuns = "Salut! Cu ce te pot ajuta? Ești interesat de achiziționarea full accesului?"
+
+        elif any(x in mesaj_tradus for x in ["am plătit", "gata", "am trimis", "am dat"]):
             await message.channel.send("Trimite-mi te rog o dovadă de plată (un screenshot).")
             return
-
-        if any(x in mesaj_tradus for x in ["salut", "bună", "hello", "hei", "hey"]):
-            răspuns = f"Salut {username}! Cu ce te pot ajuta?"
 
         elif any(x in mesaj_tradus for x in [
             "acces", "vreau acces", "cumpăr", "achiziționez", "dă-mi acces",
@@ -108,7 +101,13 @@ async def on_message(message):
             răspuns = "Te pot ajuta cu:\n- Prețuri\n- Metode de plată\n- Livrare\nScrie ce te interesează."
 
         else:
-            răspuns = "Îmi pare rău, nu am înțeles. Scrie 'ajutor' pentru opțiuni."
+            text_fallback = (
+                "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice). "
+                "Dacă întâmpini probleme, contactează Owner-ul serverului. "
+                "Până atunci, te pot ajuta cu:"
+            )
+            await message.channel.send(text_fallback, view=FallbackButtons())
+            return
 
         if lang == "en":
             try:
@@ -119,15 +118,12 @@ async def on_message(message):
 
         await message.channel.send(răspuns)
 
+        # Log
         log_channel = bot.get_channel(LOG_CHANNEL_ID)
         if log_channel:
             await log_channel.send(
                 f"**[DM de la {message.author}]**\n**Mesaj:** {message.content}\n**Răspuns:** {răspuns}"
             )
-
-        if user_id in pending_users:
-            pending_users[user_id]['task'].cancel()
-            del pending_users[user_id]
 
     await bot.process_commands(message)
 
@@ -146,27 +142,5 @@ async def start_follow_up_timer(message):
 
     task = asyncio.create_task(timer())
     pending_users[user_id] = {"task": task}
-
-# Comandă pentru a trimite mesajul cu buton într-un canal
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def buton_acces(ctx):
-    button = Button(label="Vreau acces", style=discord.ButtonStyle.green)
-
-    async def on_click(interaction):
-        await interaction.response.send_message("Verific... îți trimit un mesaj în privat!", ephemeral=True)
-        try:
-            await interaction.user.send(
-                "Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! "
-                "Scrie cu ce metodă vrei să plătești și se rezolvă!"
-            )
-        except discord.Forbidden:
-            await interaction.followup.send("Nu pot trimite mesaj în privat. Activează DM-urile!", ephemeral=True)
-
-    button.callback = on_click
-    view = View()
-    view.add_item(button)
-
-    await ctx.send("Dacă ești interesat, apasă pe butonul de mai jos sau mesaj în privat.", view=view)
 
 bot.run(os.getenv("TOKEN"))
