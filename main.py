@@ -88,7 +88,7 @@ async def on_message(message):
         elif any(cuv in mesaj for cuv in ["card", "transfer", "iban"]):
             răspuns = "Poți face transfer la:"
 IBAN: RO56BTRLRONCRT0CQ2528301
-Titular: Nume la alegere"
+Titular: "Nume la alegere"
 
         elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj:
             răspuns = "Prețul accesului este 70 RON."
