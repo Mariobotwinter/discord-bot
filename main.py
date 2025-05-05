@@ -15,7 +15,6 @@ LOG_CHANNEL_ID = 1367958714379927693
 SERVER_ID = 1324363465745240118
 ROL_ID = 1327354131181994004
 translator = Translator()
-
 pending_users = {}
 
 @bot.event
@@ -84,7 +83,10 @@ async def on_message(message):
             răspuns = "Prețul accesului este 70 RON."
             await start_follow_up_timer(message)
 
-        elif any(cuv in mesaj for cuv in ["da", "ok", "sigur", "desigur", "normal", "sunt interesat", "hai", "vreau", "confirm", "lets go", "go"]):
+        elif any(cuv in mesaj for cuv in [
+            "da", "ok", "sigur", "desigur", "normal", "sunt interesat",
+            "hai", "confirm", "lets go", "vreau"
+        ]):
             răspuns = (
                 "Perfect! Accesul costă **70 RON**.\n"
                 "Poți plăti prin:\n"
@@ -93,6 +95,12 @@ async def on_message(message):
                 "- Transfer bancar: RO56BTRLRONCRT0CQ2528301\n"
                 "Trimite dovada după ce plătești."
             )
+
+        elif "întâmpin dificultăți" in mesaj:
+            răspuns = "Owner-ul va fi anunțat și te va contacta în curând."
+            log_channel = bot.get_channel(LOG_CHANNEL_ID)
+            if log_channel:
+                await log_channel.send(f"**[ALERTĂ]** {message.author.mention} a apăsat pe „Întâmpin dificultăți”.")
 
         else:
             traducere = translator.translate(message.content, dest='ro')
