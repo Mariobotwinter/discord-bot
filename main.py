@@ -84,11 +84,15 @@ async def on_message(message):
 
         elif any(cuv in mesaj for cuv in ["paypal", "pp"]):
             răspuns = "Poți plăti prin PayPal aici: https://www.paypal.me/RomaniaQuiz"
-
         elif any(cuv in mesaj for cuv in ["card", "transfer", "iban"]):
-            răspuns = "Poți face transfer la:"
+            răspuns = (
+                "Poți face transfer la:\n"
+                "IBAN: RO56BTRLRONCRT0CQ2528301\n"
+                "Titular: Nume la alegere"
+            )
+            răspuns = "Poți face transfer la:
 IBAN: RO56BTRLRONCRT0CQ2528301
-Titular: "Nume la alegere"
+Titular: Nume la alegere"
 
         elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj:
             răspuns = "Prețul accesului este 70 RON."
@@ -96,10 +100,11 @@ Titular: "Nume la alegere"
 
         else:
             await message.channel.send(
-                "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice)."
-                
-                "Dacă întâmpini probleme, contactează Owner-ul serverului."
+                "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice).
+"
+                "Dacă întâmpini probleme, contactează Owner-ul serverului.
 
+"
                 "Până atunci te pot ajuta cu:"
             )
             await message.channel.send(view=HelpButtons())
