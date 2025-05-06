@@ -40,10 +40,14 @@ async def buton_acces(ctx):
     view = discord.ui.View()
     async def callback(interaction):
         try:
-            await interaction.user.send("Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!")
+            await interaction.user.send(
+                "Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!"
+            )
             await interaction.response.send_message("Ți-am trimis un mesaj în privat!", ephemeral=True)
+        except discord.errors.NotFound:
+            pass  # Previne eroarea Unknown Interaction
         except:
-            await interaction.response.send_message("Nu ți-am putut trimite mesaj. Asigură-te că ai mesajele private activate.", ephemeral=True)
+            await interaction.response.send_message("Nu ți-am putut trimite mesaj. Activează mesajele private.", ephemeral=True)
 
     button = discord.ui.Button(label="Vreau acces", style=discord.ButtonStyle.success)
     button.callback = callback
@@ -76,7 +80,7 @@ async def on_message(message):
                         role = guild.get_role(ROL_ID)
                         if role:
                             await member.add_roles(role)
-                            await message.channel.send("Mulțumumim pentru plata ta! Ai primit acum accesul complet pe server. Daca ai intrebari,sunt aici.")
+                            await message.channel.send("Mulțumesc! Ți-am acordat accesul.")
                         else:
                             await message.channel.send("Rolul nu a fost găsit.")
                     else:
