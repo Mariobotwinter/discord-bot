@@ -17,6 +17,20 @@ ROL_ID = 1327354131181994004
 translator = Translator()
 pending_users = {}
 
+# === View persistentă ===
+class ButonAcces(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Vreau acces", style=discord.ButtonStyle.success, custom_id="acces_button")
+    async def buton_acces(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.user.send("Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!")
+            await interaction.response.send_message("Ți-am trimis un mesaj în privat!", ephemeral=True)
+        except:
+            await interaction.response.send_message("Nu ți-am putut trimite mesaj. Activează mesajele private.", ephemeral=True)
+
+# === Butoane ajutor ===
 class HelpButtons(discord.ui.View):
     @discord.ui.button(label="Metode de plată", style=discord.ButtonStyle.primary)
     async def metode_plata(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -35,29 +49,18 @@ class HelpButtons(discord.ui.View):
             await log_channel.send(f"{interaction.user.mention} a apăsat pe 'Întâmpin dificultăți'.")
         await interaction.response.send_message("Owner-ul serverului va fi notificat să te contacteze.", ephemeral=True)
 
+# === Comandă care trimite butonul în canal ===
 @bot.command()
 async def buton_acces(ctx):
-    view = discord.ui.View()
+    await ctx.send("Dacă ești interesat, apasă pe butonul de mai jos sau mesaj în privat.", view=ButonAcces())
 
-    async def callback(interaction):
-        try:
-            await interaction.user.send("Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!")
-            await interaction.response.send_message("Ți-am trimis un mesaj în privat!", ephemeral=True)
-        except discord.errors.NotFound:
-            pass
-        except:
-            await interaction.response.send_message("Nu ți-am putut trimite mesaj. Activează mesajele private.", ephemeral=True)
-
-    button = discord.ui.Button(label="Vreau acces", style=discord.ButtonStyle.success)
-    button.callback = callback
-    view.add_item(button)
-
-    await ctx.send("Dacă ești interesat, apasă pe butonul de mai jos sau mesaj în privat.", view=view)
-
+# === READY ===
 @bot.event
 async def on_ready():
     print(f"Botul este online ca {bot.user}")
+    bot.add_view(ButonAcces())  # înregistrează view-ul permanent
 
+# === Mesaje ===
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -133,6 +136,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
+# === Timer pentru follow-up ===
 async def start_follow_up_timer(message):
     user_id = message.author.id
     if user_id in pending_users:
@@ -148,4 +152,5 @@ async def start_follow_up_timer(message):
     task = asyncio.create_task(timer())
     pending_users[user_id] = {"task": task}
 
+# === Pornește botul ===
 bot.run(os.getenv("TOKEN"))
