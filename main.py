@@ -18,15 +18,20 @@ translator = Translator()
 pending_users = {}
 
 class HelpButtons(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
     @discord.ui.button(label="Metode de plată", style=discord.ButtonStyle.primary)
     async def metode_plata(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(
-            "Poți plăti prin:\n- Revolut: https://revolut.me/liliancj2v\n- PayPal: https://www.paypal.me/RomaniaQuiz\n- Transfer bancar: IBAN: RO56BTRLRONCRT0CQ2528301", ephemeral=True)
+            "Poți plăti prin:\n- Revolut: https://revolut.me/liliancj2v\n- PayPal: https://www.paypal.me/RomaniaQuiz\n- Transfer bancar: IBAN: RO56BTRLRONCRT0CQ2528301",
+            ephemeral=True)
 
     @discord.ui.button(label="Cum primesc accesul", style=discord.ButtonStyle.primary)
     async def cum_primesc(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(
-            "După confirmarea plății, trimite un screenshot cu dovada, iar botul îți va oferi accesul automat pe server.", ephemeral=True)
+            "După confirmarea plății, trimite un screenshot cu dovada, iar botul îți va oferi accesul automat pe server.",
+            ephemeral=True)
 
     @discord.ui.button(label="Întâmpin dificultăți", style=discord.ButtonStyle.danger)
     async def dificultati(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -40,19 +45,20 @@ async def buton_acces(ctx):
     view = discord.ui.View()
     async def callback(interaction):
         try:
-            await interaction.user.send(
-                "Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!"
-            )
-            await interaction.response.send_message("Ți-am trimis un mesaj în privat!", ephemeral=True)
-        except discord.errors.NotFound:
-            pass  # Previne eroarea Unknown Interaction
+            await interaction.user.send("Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!")
+            try:
+                await interaction.response.send_message("Ți-am trimis un mesaj în privat!", ephemeral=True)
+            except discord.errors.NotFound:
+                pass
         except:
-            await interaction.response.send_message("Nu ți-am putut trimite mesaj. Activează mesajele private.", ephemeral=True)
+            try:
+                await interaction.response.send_message("Nu ți-am putut trimite mesaj. Activează mesajele private.", ephemeral=True)
+            except discord.errors.NotFound:
+                pass
 
     button = discord.ui.Button(label="Vreau acces", style=discord.ButtonStyle.success)
     button.callback = callback
     view.add_item(button)
-
     await ctx.send("Dacă ești interesat, apasă pe butonul de mai jos sau mesaj în privat.", view=view)
 
 @bot.event
@@ -115,20 +121,18 @@ async def on_message(message):
             răspuns = "Prețul accesului este 70 RON."
             await start_follow_up_timer(message)
 
+        if răspuns:
+            await message.channel.send(răspuns)
+            log_channel = bot.get_channel(LOG_CHANNEL_ID)
+            if log_channel:
+                await log_channel.send(f"**[DM de la {message.author}]**\n**Mesaj:** {message.content}\n**Răspuns:** {răspuns}")
         else:
-            răspuns = (
+            text = (
                 "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice).\n"
                 "Dacă întâmpini probleme, contactează Owner-ul serverului.\n\n"
                 "Până atunci te pot ajuta cu:"
             )
-            await message.channel.send(răspuns, view=HelpButtons())
-            return
-
-        await message.channel.send(răspuns)
-
-        log_channel = bot.get_channel(LOG_CHANNEL_ID)
-        if log_channel:
-            await log_channel.send(f"**[DM de la {message.author}]**\n**Mesaj:** {message.content}\n**Răspuns:** {răspuns}")
+            await message.channel.send(text, view=HelpButtons())
 
         if user_id in pending_users:
             pending_users[user_id]["task"].cancel()
