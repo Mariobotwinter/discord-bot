@@ -76,7 +76,7 @@ async def on_message(message):
                         role = guild.get_role(ROL_ID)
                         if role:
                             await member.add_roles(role)
-                            await message.channel.send("Mulțumesc! Ți-am acordat accesul.")
+                            await message.channel.send("Mulțumumim pentru plata ta! Ai primit acum accesul complet pe server. Daca ai intrebari,sunt aici.")
                         else:
                             await message.channel.send("Rolul nu a fost găsit.")
                     else:
