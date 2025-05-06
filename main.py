@@ -15,7 +15,6 @@ LOG_CHANNEL_ID = 1367958714379927693
 SERVER_ID = 1324363465745240118
 ROL_ID = 1327354131181994004
 translator = Translator()
-
 pending_users = {}
 
 class HelpButtons(discord.ui.View):
@@ -35,6 +34,21 @@ class HelpButtons(discord.ui.View):
         if log_channel:
             await log_channel.send(f"{interaction.user.mention} a apăsat pe 'Întâmpin dificultăți'.")
         await interaction.response.send_message("Owner-ul serverului va fi notificat să te contacteze.", ephemeral=True)
+
+@bot.command()
+async def buton_acces(ctx):
+    view = discord.ui.View()
+    async def callback(interaction):
+        try:
+            await interaction.user.send("Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!")
+        except:
+            await interaction.response.send_message("Nu ți-am putut trimite mesaj. Asigură-te că ai mesajele private activate.", ephemeral=True)
+
+    button = discord.ui.Button(label="Vreau acces", style=discord.ButtonStyle.success)
+    button.callback = callback
+    view.add_item(button)
+
+    await ctx.send("Dacă ești interesat, apasă pe butonul de mai jos sau mesaj în privat.", view=view)
 
 @bot.event
 async def on_ready():
@@ -78,18 +92,24 @@ async def on_message(message):
 
         if any(cuv in mesaj for cuv in ["salut", "sall", "hello", "hei", "hey", "buna", "bună"]):
             răspuns = "Salut! Cu ce te pot ajuta? Ești interesat de achiziționarea full accesului?"
+
         elif any(cuv in mesaj for cuv in ["da", "ok", "sunt", "vreau", "vreau sa cumpar", "interesat", "intereseaza", "sunt interesat"]):
             răspuns = "Accesul costă 70 RON. Cu ce metodă dorești să plătești? Revolut, PayPal sau transfer bancar?"
             await start_follow_up_timer(message)
+
         elif any(cuv in mesaj for cuv in ["revolut", "rev"]):
             răspuns = "Poți plăti prin Revolut aici: https://revolut.me/liliancj2v"
+
         elif any(cuv in mesaj for cuv in ["paypal", "pp"]):
             răspuns = "Poți plăti prin PayPal aici: https://www.paypal.me/RomaniaQuiz"
+
         elif any(cuv in mesaj for cuv in ["card", "transfer", "iban"]):
             răspuns = "Poți face transfer la:\nIBAN: RO56BTRLRONCRT0CQ2528301\nTitular: Nume la alegere"
+
         elif "preț" in mesaj or "pret" in mesaj or "cât costă" in mesaj:
             răspuns = "Prețul accesului este 70 RON."
             await start_follow_up_timer(message)
+
         else:
             răspuns = (
                 "Nu există răspuns pentru ce mi-ai scris (facem îmbunătățiri zilnice).\n"
@@ -113,7 +133,6 @@ async def on_message(message):
 
 async def start_follow_up_timer(message):
     user_id = message.author.id
-
     if user_id in pending_users:
         pending_users[user_id]["task"].cancel()
 
