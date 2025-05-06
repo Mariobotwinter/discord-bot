@@ -41,6 +41,7 @@ async def buton_acces(ctx):
     async def callback(interaction):
         try:
             await interaction.user.send("Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!")
+            await interaction.response.send_message("Ți-am trimis un mesaj în privat!", ephemeral=True)
         except:
             await interaction.response.send_message("Nu ți-am putut trimite mesaj. Asigură-te că ai mesajele private activate.", ephemeral=True)
 
