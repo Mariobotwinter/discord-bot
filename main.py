@@ -1,4 +1,9 @@
-import discord from discord.ext import commands import os import asyncio from googletrans import Translator import time
+import discord 
+from discord.ext import commands 
+import os 
+import asyncio 
+import time
+from googletrans import Translator
 
 intents = discord.Intents.default() intents.message_content = True intents.dm_messages = True intents.members = True
 
