@@ -16,6 +16,7 @@ SERVER_ID = 1324363465745240118
 ROL_ID = 1327354131181994004
 translator = Translator()
 pending_users = {}
+recent_clicks = {}
 
 # === View persistentă ===
 class ButonAcces(discord.ui.View):
@@ -24,8 +25,15 @@ class ButonAcces(discord.ui.View):
 
     @discord.ui.button(label="Vreau acces", style=discord.ButtonStyle.success, custom_id="acces_button")
     async def buton_acces(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user_id = interaction.user.id
+        now = asyncio.get_event_loop().time()
+        if user_id in recent_clicks and now - recent_clicks[user_id] < 10:
+            return await interaction.response.send_message("Te rog așteaptă câteva secunde înainte să încerci din nou.", ephemeral=True)
+        recent_clicks[user_id] = now
         try:
-            await interaction.user.send("Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!")
+            await interaction.user.send(
+                "Salut! Am văzut că ești interesat de achiziționare. Accesul costă 70 de RON! Scrie cu ce metodă vrei să plătești și se rezolvă!"
+            )
             await interaction.response.send_message("Ți-am trimis un mesaj în privat!", ephemeral=True)
         except:
             await interaction.response.send_message("Nu ți-am putut trimite mesaj. Activează mesajele private.", ephemeral=True)
@@ -99,7 +107,7 @@ async def on_message(message):
 
         elif any(cuv in mesaj for cuv in ["salut", "sall", "hello", "hei", "hey", "buna", "bună"]):
             răspuns = "Salut! Cu ce te pot ajuta? Ești interesat de achiziționarea full accesului?"
-        
+
         elif any(cuv in mesaj for cuv in ["da", "ok", "sunt", "vreau", "vreau sa cumpar", "interesat", "intereseaza", "sunt interesat"]):
             răspuns = "Accesul costă 70 RON. Cu ce metodă dorești să plătești? Revolut, PayPal sau transfer bancar?"
             await start_follow_up_timer(message)
